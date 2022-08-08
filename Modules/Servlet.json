@@ -1,0 +1,22 @@
+{
+  "Configurations":{
+    "Registered":[
+      {
+        "Id":"hookServlet",
+        "Class":"HookServlet",
+        "Interface":"Magic::NetWork::Http::IHttpServlet",
+        "IncludePath":"Servlet/HookServlet.h",
+        "Dependencies":["Magic::Config"],
+        "FunctionPropertys":[]
+      }
+    ],
+    "Initialize":[
+      {
+        "Id":"hookServlet",
+        "InvokeFunctions":{
+          "addRoute":["\"/Api/Public/WebHook\"","&HookServlet::hook"]
+        }
+      }
+    ]
+  }
+}
