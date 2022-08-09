@@ -6,7 +6,7 @@
         "Class":"HookServlet",
         "Interface":"Magic::NetWork::Http::IHttpServlet",
         "IncludePath":"Servlet/HookServlet.h",
-        "Dependencies":["Magic::Config"],
+        "Dependencies":[],
         "FunctionPropertys":[]
       }
     ],

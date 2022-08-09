@@ -19,14 +19,14 @@ static std::map<std::string,std::string> g_StateMap{
 
 static std::string g_FailedJson = R"({"return_code":0,"return_msg":"Failed!","data":{}})";
 
-HookServlet::HookServlet(const Safe<Magic::Config>& configuration)
-    :m_Token(configuration->at<std::string>("WebHook.Token","","微信聊天机器人的Token")){
+HookServlet::HookServlet(){
 }
 
-void HookServlet::sendMessageRobot(const std::string& message) {
+void HookServlet::sendMessageRobot(const std::string& message,const std::string& key) {
+    MAGIC_DEBUG() << "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=" + key;
     Safe<Http::HttpRequest> httpRequest = std::make_shared<Http::HttpRequest>();
     httpRequest->setMethod(Http::HttpMethod::POST)->setBody(message);
-    Safe<Http::HttpClient> httpClient = std::make_shared<Http::HttpClient>(m_Token,10000);
+    Safe<Http::HttpClient> httpClient = std::make_shared<Http::HttpClient>("https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="+key,10000);
     httpClient->onError([](const asio::error_code& errorCode){
         MAGIC_WARN() << errorCode.message();
     })->onTimeOut([](){
@@ -105,11 +105,10 @@ void HookServlet::hook(const Safe<Http::HttpSocket>& socket,const Safe<Http::Htt
             for(const auto& v : commits){
                 content += ">开发者:<font color=\\\"comment\\\">" + std::get<1>(v) + "</font>\n";
                 content += ">提交信息:<font color=\\\"comment\\\">" + std::get<2>(v) + "</font>\n";
-                content += ">Commit Id:<font color=\\\"comment\\\">" + std::get<0>(v) + "</font>\n\n";
+                content += R"(>Commit Id:<font color=\"comment\">")" + std::get<0>(v) + "\"</font>\n\n";
             }
             std::string robot = R"({"msgtype":"markdown","markdown":{"content": ")"+ content +R"("}})";
-            MAGIC_DEBUG() << robot;
-            this->sendMessageRobot(robot);
+            this->sendMessageRobot(robot,request->getParam("key"));
         }
     }else if(kind == "merge_request"){
         if(!document.HasMember("object_attributes") || !document["object_attributes"].IsObject()){
@@ -161,7 +160,7 @@ void HookServlet::hook(const Safe<Http::HttpSocket>& socket,const Safe<Http::Htt
             content += "> 请求描述： " + description;
 
         std::string robot = R"({"msgtype":"markdown","markdown":{"content": ")"+ content +R"("}})";
-        this->sendMessageRobot(robot);
+        this->sendMessageRobot(robot,request->getParam("key"));
     }
     response->setBody(R"({"return_code":1,"return_msg":"ok!","data":{}})");
     socket->sendResponse(response);
