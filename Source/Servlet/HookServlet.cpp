@@ -104,10 +104,11 @@ void HookServlet::hook(const Safe<Http::HttpSocket>& socket,const Safe<Http::Htt
             std::string content = "## Git Push\\n" +userName+ "将<font color=\\\"info\\\">" + Magic::AsString(commits.size()) + "</font>个提交上传到"+repositoryName+"仓库\\n\n";
             for(const auto& v : commits){
                 content += ">开发者:<font color=\\\"comment\\\">" + std::get<1>(v) + "</font>\n";
-                content += ">提交信息:<font color=\\\"comment\\\">" + std::get<2>(v) + "</font>\n";
-                content += R"(>Commit Id:<font color=\"comment\">")" + std::get<0>(v) + "\"</font>\n\n";
+                content += ">提交信息:<font color=\\\"comment\\\">\\\"" + std::get<2>(v) + "\\\"</font>\n";
+                content += ">Commit Id:<font color=\\\"comment\\\">" + std::get<0>(v) + "</font>\n\n";
             }
             std::string robot = R"({"msgtype":"markdown","markdown":{"content": ")"+ content +R"("}})";
+            MAGIC_DEBUG() << robot;
             this->sendMessageRobot(robot,request->getParam("key"));
         }
     }else if(kind == "merge_request"){
