@@ -36,13 +36,14 @@ void HookServlet::sendMessageRobot(const std::string& message,const std::string&
     })->execute(httpRequest);
 }
 
-void HookServlet::hook(const Safe<Http::HttpSocket>& socket,const Safe<Http::HttpRequest>& request,const Safe<Http::HttpResponse>& response){
+void HookServlet::hook(const Safe<Http::HttpSocket>& socket){
+    const auto& request = socket->getRequest();
+    const auto& response = socket->getResponse();
     MAGIC_DEBUG() << request->getBody();
     rapidjson::Document document;
-    response->setStatus(Http::HttpStatus::OK);
     if(document.Parse(request->getBody().c_str()).HasParseError() && !document.IsObject()){
-        response->setStatus(Http::HttpStatus::METHOD_NOT_ALLOWED);
-        response->setBody(g_FailedJson);
+        response->setBody(g_FailedJson)
+        ->setStatus(Http::HttpStatus::METHOD_NOT_ALLOWED);
         socket->sendResponse(response);
         return;
     }
@@ -163,6 +164,7 @@ void HookServlet::hook(const Safe<Http::HttpSocket>& socket,const Safe<Http::Htt
         std::string robot = R"({"msgtype":"markdown","markdown":{"content": ")"+ content +R"("}})";
         this->sendMessageRobot(robot,request->getParam("key"));
     }
-    response->setBody(R"({"return_code":1,"return_msg":"ok!","data":{}})");
+    response->setStatus(Http::HttpStatus::OK)
+            ->setBody(R"({"return_code":1,"return_msg":"ok!","data":{}})");
     socket->sendResponse(response);
 }
